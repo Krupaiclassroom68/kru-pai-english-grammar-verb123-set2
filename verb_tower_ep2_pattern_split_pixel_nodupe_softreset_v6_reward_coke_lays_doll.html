@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verb Tower EP2 — Pattern Split (Pixel, No-Dupe + Soft Reset) • Kru Pai Classroom</title>
+<style>
+  :root{
+    --bg:#0e0f13; --panel:#171922; --panel2:#0f1118;
+    --ink:#e5e7eb; --muted:#9aa4b2;
+    --accent:#00d1ff; --accent2:#ffe066; --accent3:#7cff6b;
+    --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:linear-gradient(180deg,var(--panel2),var(--bg));
+    color:var(--ink);
+    font-family: "Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    overflow-x:hidden;
+  }
+  .crt{position:fixed;inset:0;pointer-events:none;background:linear-gradient(rgba(255,255,255,.02),transparent 2px),linear-gradient(90deg,rgba(255,255,255,.015),transparent 2px);background-size:100% 2px,2px 100%}
+  .container{max-width:1100px;margin:0 auto;padding:18px}
+  .title{display:flex;align-items:center;gap:12px;margin:0 0 6px; font-weight:900;text-shadow:0 2px 0 #000}
+  .logo{width:48px;height:48px;display:grid;place-items:center;background:#111;border:4px solid #222;border-radius:6px;box-shadow:0 0 0 4px #000, 0 8px 0 #000}
+  h1{font-size:clamp(22px,3.6vw,32px);margin:0}
+  .subtitle{margin:4px 0 0;color:var(--muted)}
+  .card{background:var(--panel);border:4px solid #000;border-radius:8px;box-shadow:0 10px 0 #000;padding:16px}
+  .screen{display:none} .screen.active{display:block}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .input{flex:1 1 260px;padding:12px 14px;border:4px solid #000;border-radius:6px;background:#0b0d12;color:var(--ink);font-size:18px}
+  .btn{appearance:none;border:4px solid #000;border-radius:6px;padding:10px 14px;font-size:18px;font-weight:900;cursor:pointer;color:#0b0d12;box-shadow:0 6px 0 #000;transition:.15s transform}
+  .btn:active{transform:translateY(2px)}
+  .btn-a{background:linear-gradient(180deg,var(--accent),#28b9ff)}
+  .btn-b{background:linear-gradient(180deg,var(--accent2),#ffd34d)}
+  .btn-g{background:linear-gradient(180deg,var(--accent3),#5ee65b)}
+  .hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin:10px 0 14px}
+  .pill{background:#0b0d12;border:4px solid #000;border-radius:6px;padding:6px 10px;font-weight:900;color:var(--ink)}
+  .word-area{position:relative;height:min(36vh,300px);display:grid;place-items:center;margin-bottom:10px}
+  .word{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    padding:12px 18px;border-radius:6px;background:#121520;border:4px solid #000;
+    font-size:clamp(28px,6.5vw,56px);font-weight:900;color:#fff;letter-spacing:1px;text-transform: lowercase;
+    box-shadow:0 8px 0 #000, 0 0 0 6px #1b1f2d inset;}
+  .pop{animation:pop .2s steps(2,end)}
+  @keyframes pop{from{transform:translate(-50%,-50%) scale(.9)} to{transform:translate(-50%,-50%) scale(1)}}
+  .shake{animation:shake .28s steps(3,end)}
+  @keyframes shake{0%{transform:translate(-50%,-50%) rotate(0)}33%{transform:translate(-50%,-50%) rotate(-6deg)}66%{transform:translate(-50%,-50%) rotate(6deg)}100%{transform:translate(-50%,-50%) rotate(0)}}
+  .bins{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .bin{background:#10131c;border:4px solid #000;border-radius:6px;padding:10px;min-height:150px;position:relative}
+  .bin h3{margin:0 0 8px;font-size:16px;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;min-height:38px}
+  .chip{padding:6px 8px;background:#0b0d12;border:4px solid #000;border-radius:6px;font-weight:900;font-size:14px;color:#e6f6ff}
+  .b1{outline:4px solid var(--accent2)}
+  .b2{outline:4px solid var(--accent)}
+  .b3{outline:4px solid var(--accent3)}
+  .actions{display:flex;gap:8px;justify-content:center;margin-top:12px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border:2px solid #000;padding:8px;text-align:center}
+  th{background:#0b0d12;color:#cbd5e1}
+  .hint{margin:8px 0 0;color:#b4c0cf}
+
+  /* Reward boxes */
+  .boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
+  .box{position:relative;background:#0b0d12;border:4px solid #000;border-radius:8px;padding:18px;text-align:center;cursor:pointer;box-shadow:0 6px 0 #000;overflow:hidden}
+  .box .emoji{font-size:40px;display:block;transition:transform .4s}
+  .box .reveal{font-weight:900;margin-top:6px;opacity:.7}
+  .box.opened{background:#111820}
+  .box.opened .emoji{transform:scale(1.1) rotate(-6deg)}
+  .boom{animation:boom .6s ease-out both}
+  @keyframes boom{
+    0%{transform:scale(.7); filter:brightness(1.2)}
+    60%{transform:scale(1.2) rotate(2deg)}
+    100%{transform:scale(1)}
+  }
+  /* Confetti */
+  .confetti{position:absolute;inset:0;pointer-events:none;overflow:visible}
+  .confetti i{
+    position:absolute;width:8px;height:12px;background:#fff;border:2px solid #000;border-radius:2px;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{transform:translateY(140%) rotate(360deg); opacity:.9}
+  }
+
+  /* --- Added: sound/emoji feedback --- */
+  .emo-pop{
+    position:fixed; left:50%; top:22%;
+    transform:translate(-50%,-50%) scale(.6);
+    font-size:min(96px,18vw);
+    z-index:9999;
+    opacity:0;
+    filter:drop-shadow(0 10px 22px rgba(0,0,0,.25));
+    pointer-events:none;
+  }
+  .emo-pop.show{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+    animation:emoPop 1400ms ease-out forwards;
+  }
+  @keyframes emoPop{
+    0%{opacity:0;transform:translate(-50%,-60%) scale(.7)}
+    15%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
+    70%{opacity:1;transform:translate(-50%,-54%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-70%) scale(.92)}
+  }
+  .fresh-glow{
+    animation:freshGlow 520ms ease-out;
+  }
+  @keyframes freshGlow{
+    0%{box-shadow:0 0 0 0 rgba(0,0,0,0)}
+    35%{box-shadow:0 0 0 10px rgba(0,208,255,.18), 0 0 26px 6px rgba(0,208,255,.26)}
+    100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}
+  }
+
+</style>
+</head>
+<body>
+<div class="crt"></div>
+<div class="container">
+  <div class="title">
+    <div class="logo">🎮</div>
+    <div>
+      <h1>Verb Tower EP2 • Pattern Split (Pixel)</h1>
+      <p class="subtitle">โหมดนี้: ไม่เจอคำซ้ำ และถ้าพลาดจะรีเซตเฉพาะหมวดที่ถูกต้องของคำนั้น</p>
+    </div>
+  </div>
+
+  <!-- REVIEW + START -->
+  <section id="review" class="screen card active">
+    <h2 style="margin-top:0">หน้าทบทวน + ลงชื่อเล่นเกม</h2>
+    <p class="hint">เป้าหมาย: จับคำ (V1) ใส่กล่องรูปแบบที่ถูกต้อง • จับเวลา 10 วินาที/คำ • ครบ 10 ต่อหมวด</p>
+
+    <div class="row" style="margin:10px 0">
+      <input id="playerName" class="input" placeholder="พิมพ์ชื่อเล่นของหนู">
+      <button id="btnStart" class="btn btn-a">เริ่มเกม 🎮</button>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <h3 style="margin:0 0 6px">ตารางทบทวน (30 คำ)</h3>
+      <table>
+        <thead><tr><th>กลุ่ม</th><th>V1</th><th>V2</th><th>V3</th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen card">
+    <div class="hud">
+      <div class="pill">👤 ผู้เล่น: <span id="hudName">—</span></div>
+      <div class="pill">⏳ เวลา: <span id="hudTimer">10.0</span>s</div>
+      <div class="pill">❌ ผิด: <span id="hudWrong">0</span></div>
+      <div class="pill">🎯 เติม ed <span id="c1">0</span>/10 • V2=V3 <span id="c2">0</span>/10 • V1=V2=V3 <span id="c3">0</span>/10</div>
+    </div>
+
+    <div class="word-area">
+      <div id="word" class="word">play</div>
+    </div>
+
+    <div class="bins">
+      <div class="bin b1" data-cat="ed">
+        <h3>กล่อง 1 — <b>เติม ed</b></h3>
+        <div class="chips" id="chips1"></div>
+      </div>
+      <div class="bin b2" data-cat="eq23">
+        <h3>กล่อง 2 — <b>V2 = V3</b></h3>
+        <div class="chips" id="chips2"></div>
+      </div>
+      <div class="bin b3" data-cat="eq123">
+        <h3>กล่อง 3 — <b>V1 = V2 = V3</b></h3>
+        <div class="chips" id="chips3"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btnSkip" class="btn btn-b">ข้ามคำนี้</button>
+      <button id="btnRestart" class="btn btn-g">เริ่มใหม่</button>
+    </div>
+  </section>
+
+  <!-- REWARD -->
+  <section id="reward" class="screen card" style="text-align:center">
+    <h2>🎁 กล่องสุ่มพลังใจ (Pixel)</h2>
+    <p class="subtitle">ผ่านด่านแล้ว! เลือกกล่องหนึ่งใบเพื่อเปิดข้อความให้กำลังใจ</p>
+    <div class="boxes">
+      <div class="box"><span class="emoji">🕹️</span><div class="reveal">คลิกเพื่อเปิด</div><div class="confetti"></div></div>
+      <div class="box"><span class="emoji">🎲</span><div class="reveal">คลิกเพื่อเปิด</div><div class="confetti"></div></div>
+      <div class="box"><span class="emoji">💾</span><div class="reveal">คลิกเพื่อเปิด</div><div class="confetti"></div></div>
+    </div>
+    <div class="actions" style="margin-top:12px">
+      <button id="btnToSummary" class="btn btn-a">ไปหน้าสรุป</button>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="summary" class="screen card" style="text-align:center">
+    <h2>สรุปผลการเล่น</h2>
+    <div style="font-size:clamp(36px,7vw,66px);font-weight:900"><span id="finalScore">0</span> / 30</div>
+    <p class="subtitle" id="finalMsg">—</p>
+    <div class="actions">
+      <button id="btnAgain" class="btn btn-a">เล่นอีกครั้ง</button>
+      <button id="btnHome" class="btn btn-b">กลับหน้าแรก</button>
+    </div>
+  </section>
+</div>
+
+<script>
+
+// ===== BASE SETS (30) =====
+const SET_ED = [
+  ['play','played','played'],
+  ['open','opened','opened'],
+  ['clean','cleaned','cleaned'],
+  ['call','called','called'],
+  ['love','loved','loved'],
+  ['walk','walked','walked'],
+  ['help','helped','helped'],
+  ['wash','washed','washed'],
+  ['use','used','used'],
+  ['cook','cooked','cooked'],
+];
+const SET_EQ23 = [
+  ['build','built','built'],
+  ['send','sent','sent'],
+  ['spend','spent','spent'],
+  ['lend','lent','lent'],
+  ['keep','kept','kept'],
+  ['sleep','slept','slept'],
+  ['feel','felt','felt'],
+  ['leave','left','left'],
+  ['meet','met','met'],
+  ['lose','lost','lost'],
+];
+const SET_EQ123 = [
+  ['cut','cut','cut'],
+  ['put','put','put'],
+  ['let','let','let'],
+  ['set','set','set'],
+  ['hit','hit','hit'],
+  ['hurt','hurt','hurt'],
+  ['cost','cost','cost'],
+  ['shut','shut','shut'],
+  ['fit','fit','fit'],
+  ['burst','burst','burst'],
+];
+
+const TARGET = 10;
+const TIME_PER = 10.0;
+
+let S = {
+  name:'นักเรียน',
+  timeLeft: TIME_PER, timerId: null,
+  counts: { ed:0, eq23:0, eq123:0 },
+  remain: { ed:[], eq23:[], eq123:[] },
+  current: null,
+  locked:false,
+  wrong:0,
+};
+
+const $ = s => document.querySelector(s);
+const review = $('#review'), game = $('#game'), reward = $('#reward'), summary = $('#summary');
+const hudName = $('#hudName'), hudTimer = $('#hudTimer'), hudWrong = $('#hudWrong');
+const cnt1 = $('#c1'), cnt2 = $('#c2'), cnt3 = $('#c3');
+const wordEl = $('#word');
+const tb = $('#tb');
+
+(function buildTable(){
+  const rows = [];
+  function row(label, list){
+    list.forEach(([a,b,c]) => rows.push(`<tr><td>${label}</td><td>${a}</td><td>${b}</td><td>${c}</td></tr>`));
+  }
+  row('เติม ed', SET_ED);
+  row('V2 = V3', SET_EQ23);
+  row('V1 = V2 = V3', SET_EQ123);
+  tb.innerHTML = rows.join('');
+})();
+
+function show(id){ [review,game,reward,summary].forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function updateCounts(){ cnt1.textContent = S.counts.ed; cnt2.textContent = S.counts.eq23; cnt3.textContent = S.counts.eq123; }
+
+function updateWrong(){ if(hudWrong) hudWrong.textContent = S.wrong; }
+function clearChips(){ ['chips1','chips2','chips3'].forEach(id => document.getElementById(id).innerHTML = ''); }
+function addChip(cat, text){
+  const target = cat==='ed' ? '#chips1' : cat==='eq23' ? '#chips2' : '#chips3';
+  const chip = document.createElement('span'); chip.className='chip'; chip.textContent = text;
+  document.querySelector(target).appendChild(chip);
+}
+function shuffle(a){ return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]); }
+
+// ===== Sound (WebAudio) =====
+const SND = {
+  ctx:null,
+  _ensure(){
+    if(!this.ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(AC) this.ctx = new AC();
+    }
+    if(this.ctx && this.ctx.state === 'suspended'){ this.ctx.resume().catch(()=>{}); }
+  },
+  beep(f=880,d=0.06,type='sine',vol=0.12){
+    try{
+      this._ensure(); if(!this.ctx) return;
+      const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+      o.type=type; o.frequency.value=f; o.connect(g); g.connect(this.ctx.destination);
+      const t=this.ctx.currentTime;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(vol,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+      o.start(); o.stop(t+d+0.02);
+    }catch(e){}
+  },
+  click(){ this.beep(740,0.04,'triangle',0.09); },
+  ok(){ this.beep(1200,0.07,'triangle',0.16); setTimeout(()=>this.beep(1560,0.06,'triangle',0.13),80); },
+  bad(){ this.beep(220,0.11,'sawtooth',0.12); }
+};
+
+function showEmoji(char, ms=1400){
+  const el = document.getElementById('emoPop');
+  if(!el) return;
+  el.textContent = char;
+  el.classList.remove('show');
+  void el.offsetWidth; // restart
+  el.classList.add('show');
+  clearTimeout(showEmoji._t);
+  showEmoji._t = setTimeout(()=>el.classList.remove('show'), ms);
+}
+
+function freshGlow(){
+  const wrap = document.querySelector('.wrap') || document.body;
+  wrap.classList.remove('fresh-glow'); void wrap.offsetWidth;
+  wrap.classList.add('fresh-glow');
+  setTimeout(()=>wrap.classList.remove('fresh-glow'), 520);
+}
+
+
+function initPools(){
+  S.remain.ed = shuffle(SET_ED.map(v=>v[0]));
+  S.remain.eq23 = shuffle(SET_EQ23.map(v=>v[0]));
+  S.remain.eq123 = shuffle(SET_EQ123.map(v=>v[0]));
+}
+
+function needCats(){
+  const a=[];
+  if(S.counts.ed < TARGET) a.push('ed');
+  if(S.counts.eq23 < TARGET) a.push('eq23');
+  if(S.counts.eq123 < TARGET) a.push('eq123');
+  return a;
+}
+
+function pickNext(){
+  const need = needCats();
+  if(!need.length) return null;
+  const cats = need.filter(cat => S.remain[cat].length>0);
+  if(!cats.length) return null;
+  const cat = cats[Math.floor(Math.random()*cats.length)];
+  const word = S.remain[cat][0];
+  return { group:cat, word };
+}
+
+function tick(){
+  S.timeLeft = Math.max(0, S.timeLeft - 1/60);
+  hudTimer.textContent = S.timeLeft.toFixed(1);
+  if(S.timeLeft<=0){
+    handleWrong(S.current.group);
+    return;
+  }
+  S.timerId = requestAnimationFrame(tick);
+}
+
+function nextWord(){
+  if(S.timerId) cancelAnimationFrame(S.timerId);
+  const nxt = pickNext();
+  if(!nxt){ show('reward'); return; }
+  S.current = nxt;
+  S.locked = false;
+  S.timeLeft = TIME_PER;
+  wordEl.textContent = S.current.word;
+  wordEl.classList.remove('shake'); wordEl.classList.add('pop'); setTimeout(()=>wordEl.classList.remove('pop'),180);
+  S.timerId = requestAnimationFrame(tick);
+}
+
+function handleCorrect(cat){
+  S.locked = true;
+  SND.ok();
+  showEmoji('🙂', 1400);
+  freshGlow();
+  const i = S.remain[cat].indexOf(S.current.word);
+  if(i>-1) S.remain[cat].splice(i,1); // remove to avoid duplicates
+  addChip(cat, S.current.word);
+  S.counts[cat]++; updateCounts();
+  nextWord();
+}
+
+function handleWrong(correctCat){
+  S.locked = true;
+  if(S.timerId) cancelAnimationFrame(S.timerId);
+  S.wrong++; updateWrong();
+  SND.bad();
+  showEmoji('😠', 1400);
+  wordEl.classList.add('shake');
+  setTimeout(()=>wordEl.classList.remove('shake'), 320);
+  // ไม่ลบคำเดิม ไม่รีเซ็ตคอก แค่ไม่ให้คะแนน แล้วไปคำถัดไป
+  setTimeout(()=>nextWord(), 520);
+}
+
+ // ===== Reward Box Logic =====
+function confetti(el){
+  const holder = el.querySelector('.confetti');
+  holder.innerHTML = '';
+  const colors = ['#ffe066','#7cff6b','#00d1ff','#ff92c2','#fff176'];
+  for(let i=0;i<60;i++){
+    const piece = document.createElement('i');
+    piece.style.left = (Math.random()*100)+'%';
+    piece.style.top = '-10%';
+    piece.style.background = colors[i%colors.length];
+    piece.style.animationDuration = (0.8 + Math.random()*0.9)+'s';
+    piece.style.transform = `translateY(-20%) rotate(${Math.random()*180}deg)`;
+    holder.appendChild(piece);
+  }
+}
+function openBox(el, rewardText){
+  if(el.classList.contains('opened')) return;
+  el.classList.add('opened','boom');
+  // Fixed rewards (as requested): Coke, เลย์, ตุ๊กตา
+  const rewards = ['🥤 Coke', '🍟 เลย์', '🧸 ตุ๊กตา'];
+  const text = rewardText || rewards[0];
+  const r = el.querySelector('.reveal');
+  if(r) r.textContent = text;
+  confetti(el);
+}
+
+function bindReward(){
+  const rewards = ['🥤 Coke', '🍟 เลย์', '🧸 ตุ๊กตา'];
+  document.querySelectorAll('.box').forEach((box,i)=>{
+    box.addEventListener('click', ()=> openBox(box, rewards[i % rewards.length]));
+  });
+}
+
+document.getElementById('btnStart').addEventListener('click', ()=>{
+  S.name = (document.getElementById('playerName').value || 'นักเรียน').trim();
+  startGame();
+});
+document.getElementById('btnRestart').addEventListener('click', startGame);
+document.getElementById('btnSkip').addEventListener('click', nextWord);
+document.getElementById('btnAgain').addEventListener('click', startGame);
+document.getElementById('btnHome').addEventListener('click', ()=> show('review'));
+document.getElementById('btnToSummary').addEventListener('click', ()=>{
+  const score = S.counts.ed + S.counts.eq23 + S.counts.eq123;
+  document.getElementById('finalScore').textContent = score;
+  const msg = score===30 ? 'สุดยอด! จับรูปแบบได้ครบทั้ง 3 กลุ่ม 🎉' :
+              score>=24 ? 'เยี่ยมมาก อีกนิดเดียวครบแล้ว 💪' :
+              'เก่งมาก ลองใหม่อีกครั้งนะ ✨';
+  document.getElementById('finalMsg').textContent = msg;
+  show('summary');
+});
+
+[...document.querySelectorAll('.bin')].forEach(b => {
+  b.addEventListener('click', () => {
+    SND.click();
+    if(!S.current || S.locked) return;
+    const chosen = b.getAttribute('data-cat');
+    const correct = S.current.group;
+    if(chosen === correct) handleCorrect(correct);
+    else handleWrong(correct);
+  });
+});
+
+function startGame(){
+  clearChips();
+  S.counts = { ed:0, eq23:0, eq123:0 };
+  S.wrong = 0; updateWrong();
+  updateCounts();
+  S.timeLeft = TIME_PER;
+  hudName.textContent = S.name;
+  initPools();
+  show('game');
+  nextWord();
+}
+
+// Bind reward after DOM ready
+document.addEventListener('DOMContentLoaded', bindReward);
+
+</script>
+<div id="emoPop" class="emo-pop" aria-hidden="true"></div>
+</body>
+</html>
